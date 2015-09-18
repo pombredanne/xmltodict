@@ -5,33 +5,83 @@
 [![Build Status](https://secure.travis-ci.org/martinblech/xmltodict.png)](http://travis-ci.org/martinblech/xmltodict)
 
 ```python
->>> doc = xmltodict.parse("""
-... <mydocument has="an attribute">
-...   <and>
-...     <many>elements</many>
-...     <many>more elements</many>
-...   </and>
-...   <plus a="complex">
-...     element as well
-...   </plus>
-... </mydocument>
-... """)
->>>
->>> doc['mydocument']['@has']
-u'an attribute'
->>> doc['mydocument']['and']['many']
-[u'elements', u'more elements']
->>> doc['mydocument']['plus']['@a']
-u'complex'
->>> doc['mydocument']['plus']['#text']
-u'element as well'
+>>> print(json.dumps(xmltodict.parse("""
+...  <mydocument has="an attribute">
+...    <and>
+...      <many>elements</many>
+...      <many>more elements</many>
+...    </and>
+...    <plus a="complex">
+...      element as well
+...    </plus>
+...  </mydocument>
+...  """), indent=4))
+{
+    "mydocument": {
+        "@has": "an attribute", 
+        "and": {
+            "many": [
+                "elements", 
+                "more elements"
+            ]
+        }, 
+        "plus": {
+            "@a": "complex", 
+            "#text": "element as well"
+        }
+    }
+}
 ```
 
-It's very fast ([Expat](http://docs.python.org/library/pyexpat.html)-based) and has a streaming mode with a small memory footprint, suitable for big XML dumps like [Discogs](http://discogs.com/data/) or [Wikipedia](http://dumps.wikimedia.org/):
+## Namespace support
+
+By default, `xmltodict` does no XML namespace processing (it just treats namespace declarations as regular node attributes), but passing `process_namespaces=True` will make it expand namespaces for you:
+
+```python
+>>> xml = """
+... <root xmlns="http://defaultns.com/"
+...       xmlns:a="http://a.com/"
+...       xmlns:b="http://b.com/">
+...   <x>1</x>
+...   <a:y>2</a:y>
+...   <b:z>3</b:z>
+... </root>
+... """
+>>> xmltodict.parse(xml, process_namespaces=True) == {
+...     'http://defaultns.com/:root': {
+...         'http://defaultns.com/:x': '1',
+...         'http://a.com/:y': '2',
+...         'http://b.com/:z': '3',
+...     }
+... }
+True
+```
+
+It also lets you collapse certain namespaces to shorthand prefixes, or skip them altogether:
+
+```python
+>>> namespaces = {
+...     'http://defaultns.com/': None, # skip this namespace
+...     'http://a.com/': 'ns_a', # collapse "http://a.com/" -> "ns_a"
+... }
+>>> xmltodict.parse(xml, process_namespaces=True, namespaces=namespaces) == {
+...     'root': {
+...         'x': '1',
+...         'ns_a:y': '2',
+...         'http://b.com/:z': '3',
+...     },
+... }
+True
+```
+
+## Streaming mode
+
+`xmltodict` is very fast ([Expat](http://docs.python.org/library/pyexpat.html)-based) and has a streaming mode with a small memory footprint, suitable for big XML dumps like [Discogs](http://discogs.com/data/) or [Wikipedia](http://dumps.wikimedia.org/):
 
 ```python
 >>> def handle_artist(_, artist):
 ...     print artist['name']
+...     return True
 >>> 
 >>> xmltodict.parse(GzipFile('discogs_artists.xml.gz'),
 ...     item_depth=2, item_callback=handle_artist)
@@ -77,21 +127,23 @@ $ cat enwiki.dicts.gz | gunzip | script2.py
 ...
 ```
 
+## Roundtripping
+
 You can also convert in the other direction, using the `unparse()` method:
 
 ```python
 >>> mydict = {
-...     'page': {
-...         'title': 'King Crimson',
-...         'ns': 0,
-...         'revision': {
-...             'id': 547909091,
-...         }
+...     'response': {
+...             'status': 'good',
+...             'last_updated': '2014-02-16T23:10:12Z',
 ...     }
 ... }
->>> print unparse(mydict)
+>>> print unparse(mydict, pretty=True)
 <?xml version="1.0" encoding="utf-8"?>
-<page><ns>0</ns><revision><id>547909091</id></revision><title>King Crimson</title></page>
+<response>
+	<status>good</status>
+	<last_updated>2014-02-16T23:10:12Z</last_updated>
+</response>
 ```
 
 ## Ok, how do I get it?
