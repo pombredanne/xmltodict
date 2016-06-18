@@ -1,6 +1,38 @@
 CHANGELOG
 =========
 
+v0.10.2
+-------
+
+* Fixed defusedexpat expat import.
+  * Thanks, @fiebiga!
+
+v0.10.1
+-------
+
+* Use defusedexpat if available.
+* Allow non-string attributes in unparse.
+* Add postprocessor support for attributes.
+* Make command line interface Python 3-compatible.
+
+v0.10.0
+-------
+
+* Add force_list feature.
+  * Thanks, @guewen and @jonlooney!
+* Add support for Python 3.4 and 3.5.
+* Performance optimization: use list instead of string for CDATA.
+  * Thanks, @bharel!
+* Include Arch Linux package instructions in README.
+  * Thanks, @felixonmars!
+* Improved documentation.
+  * Thanks, @ubershmekel!
+* Allow any iterable in unparse, not just lists.
+  * Thanks, @bzamecnik!
+* Bugfix: Process namespaces in attributes too.
+* Better testing under Python 2.6.
+  * Thanks, @TyMaszWeb!
+
 v0.9.2
 ------
 

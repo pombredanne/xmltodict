@@ -129,6 +129,16 @@ class XMLToDictTestCase(unittest.TestCase):
                          parse('<a><b>1</b><b>2</b><b>x</b></a>',
                                postprocessor=postprocessor))
 
+    def test_postprocessor_attribute(self):
+        def postprocessor(path, key, value):
+            try:
+                return key + ':int', int(value)
+            except (ValueError, TypeError):
+                return key, value
+        self.assertEqual({'a': {'@b:int': 1}},
+                         parse('<a b="1"/>',
+                               postprocessor=postprocessor))
+
     def test_postprocessor_skip(self):
         def postprocessor(path, key, value):
             if key == 'b':
@@ -227,3 +237,61 @@ class XMLToDictTestCase(unittest.TestCase):
             },
         }
         self.assertEqual(parse(xml), d)
+
+    def test_force_list_basic(self):
+        xml = """
+        <servers>
+          <server>
+            <name>server1</name>
+            <os>os1</os>
+          </server>
+        </servers>
+        """
+        expectedResult = {
+            'servers': {
+                'server': [
+                    {
+                        'name': 'server1',
+                        'os': 'os1',
+                    },
+                ],
+            }
+        }
+        self.assertEqual(parse(xml, force_list=('server',)), expectedResult)
+
+    def test_force_list_callable(self):
+        xml = """
+        <config>
+            <servers>
+              <server>
+                <name>server1</name>
+                <os>os1</os>
+              </server>
+            </servers>
+            <skip>
+                <server></server>
+            </skip>
+        </config>
+        """
+        def force_list(path, key, value):
+            """Only return True for servers/server, but not for skip/server."""
+            if key != 'server':
+                return False
+            return path and path[-1][0] == 'servers'
+
+        expectedResult = {
+            'config': {
+                'servers': {
+                    'server': [
+                        {
+                            'name': 'server1',
+                            'os': 'os1',
+                        },
+                    ],
+                },
+                'skip': {
+                    'server': None,
+                },
+            },
+        }
+        self.assertEqual(parse(xml, force_list=force_list, dict_constructor=dict), expectedResult)

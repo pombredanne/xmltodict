@@ -146,7 +146,26 @@ You can also convert in the other direction, using the `unparse()` method:
 </response>
 ```
 
+Text values for nodes can be specified with the `cdata_key` key in the python dict, while node properties can be specified with the `attr_prefix` prefixed to the key name in the python dict. The default value for `attr_prefix` is `@` and the default value for `cdata_key` is `#text`.
+
+```python
+>>> import xmltodict
+>>> 
+>>> mydict = {
+...     'text': {
+...         '@color':'red',
+...         '@stroke':'2',
+...         '#text':'This is a test'
+...     }
+... }
+>>> print xmltodict.unparse(mydict, pretty=True)
+<?xml version="1.0" encoding="utf-8"?>
+<text stroke="2" color="red">This is a test</text>
+```
+
 ## Ok, how do I get it?
+
+### Using pypi
 
 You just need to
 
@@ -154,12 +173,26 @@ You just need to
 $ pip install xmltodict
 ```
 
-There is an [official Fedora package for xmltodict](https://admin.fedoraproject.org/pkgdb/acls/name/python-xmltodict). If you are on Fedora or RHEL, you can do:
+### RPM-based distro (Fedora, RHEL, …)
+
+There is an [official Fedora package for xmltodict](https://admin.fedoraproject.org/pkgdb/acls/name/python-xmltodict).
 
 ```sh
 $ sudo yum install python-xmltodict
 ```
 
-## Donate
+### Arch Linux
 
-If you love `xmltodict`, consider supporting the author [on Gittip](https://www.gittip.com/martinblech/).
+There is an [official Arch Linux package for xmltodict](https://www.archlinux.org/packages/community/any/python-xmltodict/).
+
+```sh
+$ sudo pacman -S python-xmltodict
+```
+
+### Debian-based distro (Debian, Ubuntu, …)
+
+There is an [official Debian package for xmltodict](https://tracker.debian.org/pkg/python-xmltodict).
+
+```sh
+$ sudo apt install python-xmltodict
+```
